@@ -2,7 +2,8 @@ import os
 import re
 import json
 import requests
-import fitz  # PyMuPDF
+from pypdf import PdfReader
+import io
 import firebase_admin
 from firebase_admin import credentials, firestore
 from google.cloud.firestore_v1.base_query import FieldFilter
@@ -180,13 +181,13 @@ class ResumeAnalysisSystem:
             response = requests.get(pdf_url, timeout=30)
             response.raise_for_status()
             
-            # Process PDF content
-            doc = fitz.open(stream=response.content, filetype="pdf")
+            # Process PDF content using pypdf
+            pdf_reader = PdfReader(io.BytesIO(response.content))
             docs = []
             full_text = ""
             
-            for i, page in enumerate(doc):
-                text = page.get_text()
+            for i, page in enumerate(pdf_reader.pages):
+                text = page.extract_text()
                 full_text += text + "\n"
                 docs.append(
                     Document(
@@ -194,7 +195,6 @@ class ResumeAnalysisSystem:
                         metadata={"source": pdf_url, "page": i + 1}
                     )
                 )
-            doc.close()
             
             # Create embeddings and vector store
             text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)

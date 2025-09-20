@@ -11,7 +11,6 @@ from langchain.schema import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_community.vectorstores import FAISS
-from langchain_groq import ChatGroq
 from langchain_core.messages import SystemMessage, HumanMessage
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
@@ -35,10 +34,10 @@ class CVAnalysisResponse(BaseModel):
     success: bool
     message: str
     user_id: str
-    resume_url: str = None
-    analysis: Dict[str, Any] = None
+    resume_url: Optional[str] = None
+    analysis: Optional[Dict[str, Any]] = None
     stored_in_firestore: bool = False
-    error_details: str = None
+    error_details: Optional[str] = None
 
 # Initialize Firebase once when the module loads
 def initialize_firebase():
@@ -85,15 +84,11 @@ class ResumeAnalysisSystem:
         
         # Get API keys from environment variables
         openai_key = os.environ.get("OPENAI_API_KEY")
-        groq_key = os.environ.get("GROQ_API_KEY")
         
         if not openai_key:
             raise Exception("OPENAI_API_KEY not found in environment variables")
-        if not groq_key:
-            raise Exception("GROQ_API_KEY not found in environment variables")
             
         os.environ["OPENAI_API_KEY"] = openai_key
-        os.environ["GROQ_API_KEY"] = groq_key
         
         if not db:
             raise Exception("Firebase not initialized")
